@@ -2,12 +2,14 @@ extern crate cfg_if;
 extern crate wasm_bindgen;
 extern crate web_sys;
 extern crate js_sys;
+extern crate fixedbitset;
 
 mod utils;
 
 use std::fmt;
 use wasm_bindgen::prelude::*;
 use web_sys::console;
+use fixedbitset::FixedBitSet;
 
 // based off of https://rustwasm.github.io/docs/book/game-of-life/implementing.html
 
@@ -15,7 +17,9 @@ impl fmt::Display for Universe {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for line in self.cells.as_slice().chunks(self.width as usize) {
             for &cell in line {
-                let symbol = if cell == Cell::Dead { '◻' } else { '◼' };
+                // let symbol = if cell == Cell::Dead { '◻' } else { '◼' };
+                // modify for bitset
+                let symbol = if cell == 0 { '◻' } else { '◼' };
                 write!(f, "{}", symbol)?;
             }
             writeln!(f)?;
@@ -36,7 +40,7 @@ pub enum Cell {
 pub struct Universe {
     width: u32,
     height: u32,
-    cells: Vec<Cell>, // [i * width + j] to index at [i][j]
+    cells: FixedBitSet, // [i * width + j] to index at [i][j]
 }
 
 const NEIGHBORS: [(i32, i32); 8] = [
@@ -76,34 +80,13 @@ impl Universe {
         count
     }
 
-    pub fn new(width: u32, height: u32) -> Universe {
-        let cells = (0..width * height)
-            .map(|i| {
-                if i % 2 == 0 || i % 7 == 0 {
-                    Cell::Alive
-                } else {
-                    Cell::Dead
-                }
-            })
-            .collect();
-
-        Universe {
-            width,
-            height,
-            cells,
-        }
-    }
-
     pub fn new_random(width: u32, height: u32, life_chance: f64) -> Universe {
-        let cells = (0..width * height)
-            .map(|_| {
-                if js_sys::Math::random() < life_chance {
-                    Cell::Alive
-                } else {
-                    Cell::Dead
-                }
-            })
-            .collect();
+        let size = (width * height) as usize;
+        let mut cells = FixedBitSet::with_capacity(size);
+
+        for i in 0..size {
+            cells.set(i, js_sys::Math::random() < life_chance);
+        }
 
         Universe {
             width,
@@ -111,6 +94,11 @@ impl Universe {
             cells,
         }
     }
+
+    pub fn new(width: u32, height: u32) -> Universe {
+        Universe::new_random(width, height, 0.25)
+    }
+
 
     pub fn new_random_default() -> Universe {
         let width = 384;
@@ -128,19 +116,18 @@ impl Universe {
                 let cell = self.cells[idx];
                 let live_neighbors = self.live_neighbor_count(row, col);
 
-                let next_cell = match (cell, live_neighbors) {
+                next.set(idx, match (cell, live_neighbors) {
                     // Rule 1: Any live cell with < 2 live neighbours dies by underpopulation
-                    (Cell::Alive, x) if x < 2 => Cell::Dead,
+                    (true, x) if x < 2 => false,
                     // Rule 2: Any live cell with 2 or 3 live neighbours lives on
-                    (Cell::Alive, 2) | (Cell::Alive, 3) => Cell::Alive,
+                    (true, 2) | (true, 3) => true,
                     // Rule 3: Any live cell with > 3 live neighbours dies by overpopulation
-                    (Cell::Alive, x) if x > 3 => Cell::Dead,
+                    (true, x) if x > 3 => false,
                     // Rule 4: Any dead cell with 3 live neighbours becomes alive by reproduction
-                    (Cell::Dead, 3) => Cell::Alive,
+                    (false, 3) => true,
                     // All other cells remain in the same state.
                     (otherwise, _) => otherwise,
-                };
-                next[idx] = next_cell;
+                });
             }
         }
 
@@ -155,8 +142,8 @@ impl Universe {
         self.height
     }
 
-    pub fn cells(&self) -> *const Cell {
-        self.cells.as_ptr()
+    pub fn cells(&self) -> *const usize {
+        self.cells.as_slice().as_ptr()
     }
 
     pub fn render(&self) -> String {
