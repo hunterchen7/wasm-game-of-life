@@ -1,6 +1,7 @@
 extern crate cfg_if;
 extern crate wasm_bindgen;
 extern crate web_sys;
+extern crate js_sys;
 
 mod utils;
 
@@ -91,6 +92,31 @@ impl Universe {
             height,
             cells,
         }
+    }
+
+    pub fn new_random(width: u32, height: u32, life_chance: f64) -> Universe {
+        let cells = (0..width * height)
+            .map(|_| {
+                if js_sys::Math::random() < life_chance {
+                    Cell::Alive
+                } else {
+                    Cell::Dead
+                }
+            })
+            .collect();
+
+        Universe {
+            width,
+            height,
+            cells,
+        }
+    }
+
+    pub fn new_random_default() -> Universe {
+        let width = 384;
+        let height = 192;
+        let life_chance = 0.25;
+        Universe::new_random(width, height, life_chance)
     }
 
     pub fn tick(&mut self) {
