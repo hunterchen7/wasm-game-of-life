@@ -12,12 +12,12 @@ jobs:
 
       - run: cargo test
       - run: wasm-pack build --release
-      - run: npm install
-      - run: npm run build
+      - run: cd www && npm install
+      - run: cd www && npm run build
       - name: Deploy to GitHub Pages
         if: github.ref == 'refs/heads/main'
         uses: peaceiris/actions-gh-pages@v3
         with:
           deploy_key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
-          publish_dir: ./dist
+          publish_dir: ./www/dist
           # Optional: Add CNAME, project_url, etc.
