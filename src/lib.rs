@@ -8,8 +8,6 @@ use std::fmt;
 use wasm_bindgen::prelude::*;
 use web_sys::console;
 
-use wasm_bindgen::prelude::*;
-
 // based off of https://rustwasm.github.io/docs/book/game-of-life/implementing.html
 
 impl fmt::Display for Universe {
