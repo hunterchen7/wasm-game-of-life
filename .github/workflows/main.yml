@@ -1,16 +1,40 @@
 on: [push, pull_request]
 
 jobs:
-  wasm-build:
+  build:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v4.0.2
+    - uses: actions/checkout@v2
 
-      - name: Install
-        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+    - name: Set up Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
 
-      - run: cargo test
-      - run: wasm-pack build --release
-      - run: cd www && npm install
-      - run: npm run build
+    - name: Build Wasm
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        args: --release --target wasm32-unknown-unknown
+
+    - name: Run wasm-pack
+      run: wasm-pack build
+
+    # Assuming your wasm-pack build outputs to 'pkg' and your static site is in 'dist'
+    - name: Install Node.js and npm dependencies
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14'
+      run: |
+        npm install
+        npm run build # Or any other command that prepares your 'dist' directory
+
+    - name: Deploy to GitHub Pages
+      if: github.ref == 'refs/heads/main'
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        deploy_key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
+        publish_dir: ./dist
+        # Optional: Add CNAME, project_url, etc.
