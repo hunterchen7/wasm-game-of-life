@@ -1,15 +1,15 @@
 import { Universe, Cell, wasm_memory } from "wasm-game-of-life";
 import { memory } from "wasm-game-of-life/wasm_game_of_life_bg.wasm";
 
-const CELL_SIZE = 5; // px
+const CELL_SIZE = 6; // px
 const GRID_COLOR = "#161719";
 const DEAD_COLOR = "#555455";
 const ALIVE_COLOR = "#C097F0";
 
 // Construct the universe, and get its width and height.
-let w = 128;
-let h = 128;
-let spawn_rate = 0.5;
+let w = window.innerWidth / CELL_SIZE - 1
+let h = window.innerHeight / CELL_SIZE - 1;
+let spawn_rate = 0.35;
 const universe = Universe.new_random(w, h, spawn_rate);
 const width = universe.width();
 const height = universe.height();
