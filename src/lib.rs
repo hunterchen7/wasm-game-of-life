@@ -210,7 +210,7 @@ impl Universe {
         }
 
         self.cells = next;
-        #[cfg(debug_assertions)] {
+        #[cfg(debug_assertions)] { // can't debug assertion on expressions, must have own scope
             self.tick += 1;
         }
 
