@@ -109,6 +109,11 @@ impl Universe {
         }
         count
     }
+    
+    pub fn toggle_cell(&mut self, row: u32, column: u32) {
+        let idx = self.get_index(row, column);
+        self.cells.set(idx, !self.cells[idx]);
+    }
 
     // generates a new random board with given width and height
     // every cell has a 'life_chance' chance of being alive
