@@ -1,7 +1,7 @@
 import { Universe, Cell, wasm_memory } from "wasm-game-of-life";
 import { memory } from "wasm-game-of-life/wasm_game_of_life_bg.wasm";
 
-const CELL_SIZE = 6; // px
+let CELL_SIZE = 6; // px
 const GRID_COLOR = "#161719";
 const DEAD_COLOR = "#555455";
 const ALIVE_COLOR = "#C097F0";
@@ -134,6 +134,37 @@ document.body.onkeyup = function(e) {
         }
     }
 }
+
+const canvasContainer = document.getElementById("canvas-container");
+// scroll bar to zoom in/out
+canvasContainer.addEventListener('wheel', function(e) {
+    e.preventDefault();
+
+    const boundingRect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / boundingRect.width;
+    const scaleY = canvas.height / boundingRect.height;
+
+    const canvasLeftBeforeZoom = canvasContainer.scrollLeft + (e.clientX - boundingRect.left) * scaleX;
+    const canvasTopBeforeZoom = canvasContainer.scrollTop + (e.clientY - boundingRect.top) * scaleY;
+
+    if (e.deltaY < 0) {
+        CELL_SIZE *= 1.1;
+    } else {
+        CELL_SIZE *= 0.9;
+    }
+
+    canvas.height = (CELL_SIZE + 1) * height + 1;
+    canvas.width = (CELL_SIZE + 1) * width + 1;
+
+    const canvasLeftAfterZoom = canvasLeftBeforeZoom * ((CELL_SIZE + 1) / (CELL_SIZE + 2));
+    const canvasTopAfterZoom = canvasTopBeforeZoom * ((CELL_SIZE + 1) / (CELL_SIZE + 2));
+
+    canvasContainer.left += (canvasLeftAfterZoom - canvasLeftBeforeZoom);
+    canvasContainer.top += (canvasTopAfterZoom - canvasTopBeforeZoom);
+
+    drawGrid();
+    drawCells();
+}, { passive: false });
 
 // play/pause buttons
 const playPauseButton = document.getElementById("play-pause");
