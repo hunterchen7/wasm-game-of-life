@@ -47,6 +47,7 @@ pub struct Universe {
     width: u32,
     height: u32,
     cells: FixedBitSet, // [i * width + j] to index at [i][j]
+    #[cfg(debug_assertions)]
     tick: u64,
 }
 
@@ -125,6 +126,7 @@ impl Universe {
             width,
             height,
             cells,
+            #[cfg(debug_assertions)]
             tick: 0,
         }
     }
@@ -150,6 +152,7 @@ impl Universe {
             width,
             height,
             cells,
+            #[cfg(debug_assertions)]
             tick: 0,
         }
     }
@@ -207,7 +210,10 @@ impl Universe {
         }
 
         self.cells = next;
-        self.tick += 1;
+        #[cfg(debug_assertions)] { // can't debug assertion on expressions, must have own scope
+            self.tick += 1;
+        }
+
     }
 
     pub fn width(&self) -> u32 {
