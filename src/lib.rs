@@ -8,8 +8,16 @@ mod utils;
 
 use std::fmt;
 use wasm_bindgen::prelude::*;
+#[cfg(debug_assertions)]
 use web_sys::console;
 use fixedbitset::FixedBitSet;
+
+#[cfg(debug_assertions)]
+macro_rules! log {
+    ( $( $t:tt )* ) => {
+        console::log_1(&format!( $( $t )* ).into());
+    }
+}
 
 // based off of https://rustwasm.github.io/docs/book/game-of-life/implementing.html
 
@@ -39,6 +47,7 @@ pub struct Universe {
     width: u32,
     height: u32,
     cells: FixedBitSet, // [i * width + j] to index at [i][j]
+    tick: u64,
 }
 
 const NEIGHBORS: [(i32, i32); 8] = [
@@ -104,6 +113,7 @@ impl Universe {
     // every cell has a 'life_chance' chance of being alive
     // at > ~0.7 most will die instantly from overpopulation
     pub fn new_random(width: u32, height: u32, life_chance: f64) -> Universe {
+        utils::set_panic_hook();
         let size = (width * height) as usize;
         let mut cells = FixedBitSet::with_capacity(size);
 
@@ -115,6 +125,7 @@ impl Universe {
             width,
             height,
             cells,
+            tick: 0,
         }
     }
 
@@ -122,7 +133,6 @@ impl Universe {
     pub fn new(width: u32, height: u32) -> Universe {
         Universe::new_random(width, height, 0.25)
     }
-
 
     // creates a new 384x192 universe with 0.25 chance of life
     // each square is 6x6 pixels
@@ -134,11 +144,13 @@ impl Universe {
     }
 
     pub fn new_blank(width: u32, height: u32) -> Universe {
+        utils::set_panic_hook();
         let cells = FixedBitSet::with_capacity((width * height) as usize);
         Universe {
             width,
             height,
             cells,
+            tick: 0,
         }
     }
 
@@ -149,15 +161,21 @@ impl Universe {
     pub fn tick(&mut self) {
         let mut next = self.cells.clone();
 
+        #[cfg(debug_assertions)]
+        let (mut alive_to_dead, mut dead_to_alive) = (Vec::new(), Vec::new());
+
         for row in 0..self.height {
             for col in 0..self.width {
                 let idx = self.get_index(row, col);
                 let cell = self.cells[idx];
                 let live_neighbors = self.live_neighbor_count(row, col);
 
+                #[cfg(debug_assertions)]
+                let before = cell;
+
                 next.set(idx, match (cell, live_neighbors) {
                     // Rule 1: Any live cell with < 2 live neighbours dies by underpopulation
-                    (true, x) if x < 2 => false,
+                    (true, 0) | (true, 1) => false,
                     // Rule 2: Any live cell with 2 or 3 live neighbours lives on
                     (true, 2) | (true, 3) => true,
                     // Rule 3: Any live cell with > 3 live neighbours dies by overpopulation
@@ -167,10 +185,29 @@ impl Universe {
                     // All other cells remain in the same state.
                     (otherwise, _) => otherwise,
                 });
+
+                #[cfg(debug_assertions)]
+                if before && !next[idx] {
+                    alive_to_dead.push(idx);
+                } else if !before && next[idx] {
+                    dead_to_alive.push(idx);
+                }
+            }
+        }
+
+        #[cfg(debug_assertions)]
+        {
+            log!("tick: {}", self.tick);
+            if !alive_to_dead.is_empty() || !dead_to_alive.is_empty() {
+                log!("alive_to_dead: {:?}", alive_to_dead);
+                log!("dead_to_alive: {:?}", dead_to_alive);
+            } else {
+                log!("no changes");
             }
         }
 
         self.cells = next;
+        self.tick += 1;
     }
 
     pub fn width(&self) -> u32 {
