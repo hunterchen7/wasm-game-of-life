@@ -8,3 +8,4 @@ www/node_modules
 www~HEAD
 .idea
 /.idea
+www/dist
