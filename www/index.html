@@ -2,7 +2,7 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <title>Hello wasm-pack!</title>
+        <title>Game of Life - WebAssembly</title>
         <style>
             body {
                 position: absolute;
@@ -21,10 +21,70 @@
                 white-space: pre;
                 font-family: monospace;
             }
+            #control-panel {
+                position: fixed;
+                z-index: 100;
+                right: 10px;
+                bottom: 10px;
+                background: #f0f0f0;
+                min-width: 250px;
+                width: 30%;
+                height: 50px;
+                border-radius: 10px;
+                display: flex;
+                justify-content: space-around;
+                align-items: center;
+            }
+            #spawner {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+            #speed-things {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
         </style>
     </head>
     <body>
+        <div id="control-panel">
+            <button id="play-pause"></button>
+            <button id="reset">reset</button>
+            <div id="spawner">
+                <div>
+                    <label for="spawn-rate"></label>
+                    <input id="spawn-rate" type="range" min="1" max="100" value="50">
+                </div>
+                <button id="randomize">randomize</button>
+            </div>
+            <button id="step">next</button>
+            <div id="speed-things">
+                <div>
+                    <label for="time-between">tick rate: 50</label>
+                    <input id="time-between" type="range" min="0" max="300" value="33">
+                </div>
+                <div id="ticks">total ticks: 0</div>
+            </div>
+
+        </div>
         <canvas id="game-of-life-canvas"></canvas>
         <script src="./bootstrap.js"></script>
+        <script>
+            let spawnRateInput = document.getElementById('spawn-rate');
+            let spawnRateLabel = document.querySelector('label[for="spawn-rate"]');
+
+            spawnRateLabel.textContent = `${spawnRateInput.value}%`;
+            spawnRateInput.addEventListener('input', () => {
+                spawnRateLabel.textContent = `${spawnRateInput.value}%`;
+            });
+
+            let timeBetweenInput = document.getElementById('time-between');
+            let timeBetweenLabel = document.querySelector('label[for="time-between"]');
+            timeBetweenLabel.textContent = `tick time: ${timeBetweenInput.value} ms`;
+            timeBetweenInput.addEventListener('input', () => {
+                timeBetweenLabel.textContent = `tick time: ${timeBetweenInput.value} ms`;
+            });
+        </script>
     </body>
 </html>

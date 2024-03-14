@@ -109,6 +109,11 @@ impl Universe {
         }
         count
     }
+    
+    pub fn toggle_cell(&mut self, row: u32, column: u32) {
+        let idx = self.get_index(row, column);
+        self.cells.set(idx, !self.cells[idx]);
+    }
 
     // generates a new random board with given width and height
     // every cell has a 'life_chance' chance of being alive
@@ -230,6 +235,16 @@ impl Universe {
 
     pub fn render(&self) -> String {
         self.to_string()
+    }
+
+    pub fn reset(&mut self) {
+        self.cells.clear() // clear all cells by setting to false
+    }
+    
+    pub fn randomize(&mut self, spawn_rate: f64) {
+        for i in 0..self.cells.len() {
+            self.cells.set(i, js_sys::Math::random() < spawn_rate);
+        }
     }
 }
 

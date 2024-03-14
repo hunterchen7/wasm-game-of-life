@@ -22,15 +22,34 @@ canvas.width = (CELL_SIZE + 1) * width + 1;
 
 const ctx = canvas.getContext('2d');
 
-const renderLoop = () => {
-    debugger;
+let ticks = 0;
+
+const tick = () => {
+    ticks += 1;
+    updateTicks();
     universe.tick();
 
     drawGrid();
     drawCells();
+}
 
-    requestAnimationFrame(renderLoop);
+let animationId = null;
+let timeoutId = null;
+
+const renderLoop = () => {
+    const timeBetween = document.getElementById("time-between").value;
+
+    timeoutId = setTimeout(() => {
+        debugger;
+        tick();
+        animationId = requestAnimationFrame(renderLoop);
+    }, timeBetween);
 };
+
+// updated by pause/play actions from button or space bar
+const isPaused = () => {
+    return animationId === null;
+}
 
 const drawGrid = () => {
     ctx.beginPath();
@@ -85,6 +104,95 @@ const drawCells = () => {
     ctx.stroke();
 };
 
+// click to toggle cells when paused
+canvas.addEventListener("click", event => {
+    const boundingRect = canvas.getBoundingClientRect();
+
+    const scaleX = canvas.width / boundingRect.width;
+    const scaleY = canvas.height / boundingRect.height;
+
+    const canvasLeft = (event.clientX - boundingRect.left) * scaleX;
+    const canvasTop = (event.clientY - boundingRect.top) * scaleY;
+
+    const row = Math.min(Math.floor(canvasTop / (CELL_SIZE + 1)), height - 1);
+    const col = Math.min(Math.floor(canvasLeft / (CELL_SIZE + 1)), width - 1);
+
+    if (animationId === null) { // only allow toggle cells if the game is paused
+        universe.toggle_cell(row, col);
+        drawGrid();
+        drawCells();
+    }
+});
+
+// space bar to pause/play
+document.body.onkeyup = function(e) {
+    if (e.key === " " || e.code === "Space" || e.keyCode === 32) {
+        if (isPaused()) {
+            play();
+        } else {
+            pause();
+        }
+    }
+}
+
+// play/pause buttons
+const playPauseButton = document.getElementById("play-pause");
+const play = () => {
+    playPauseButton.textContent = "pause";
+    renderLoop();
+};
+
+const pause = () => {
+    playPauseButton.textContent = "play";
+    cancelAnimationFrame(animationId);
+    clearTimeout(timeoutId);
+    animationId = null;
+}
+
+playPauseButton.addEventListener("click", event => {
+    if (isPaused()) {
+        play();
+    } else {
+        pause();
+    }
+});
+
+// reset button
+const resetButton = document.getElementById("reset");
+resetButton.addEventListener("click", event => {
+    ticks = 0;
+    universe.reset();
+    drawGrid();
+    drawCells();
+});
+
+// randomize button
+const randomizeButton = document.getElementById("randomize");
+
+randomizeButton.addEventListener("click", event => {
+    const spawnInput = document.getElementById("spawn-rate");
+    const spawnRate = spawnInput.value;
+    console.log('spawn rate: ', spawnRate);
+    ticks = 0;
+    universe.randomize(spawnRate / 100);
+    drawGrid();
+    drawCells();
+});
+
+// step button
+const stepButton = document.getElementById("step");
+stepButton.addEventListener("click", event => {
+    tick();
+    drawGrid();
+    drawCells();
+});
+
+// update ticks
+const tickDisplay = document.getElementById("ticks");
+const updateTicks = () => {
+    tickDisplay.textContent = `total ticks: ${ticks}`;
+}
+
 drawGrid();
 drawCells();
-requestAnimationFrame(renderLoop);
+play();
