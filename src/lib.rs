@@ -236,6 +236,16 @@ impl Universe {
     pub fn render(&self) -> String {
         self.to_string()
     }
+
+    pub fn reset(&mut self) {
+        self.cells.clear() // clear all cells by setting to false
+    }
+    
+    pub fn randomize(&mut self, spawn_rate: f64) {
+        for i in 0..self.cells.len() {
+            self.cells.set(i, js_sys::Math::random() < spawn_rate);
+        }
+    }
 }
 
 #[wasm_bindgen]
