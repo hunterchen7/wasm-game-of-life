@@ -34,7 +34,6 @@
                 display: flex;
                 justify-content: space-around;
                 align-items: center;
-                user-select: none;
             }
             #spawner {
                 display: flex;
@@ -45,20 +44,6 @@
                 display: flex;
                 flex-direction: column;
                 align-items: center;
-            }
-            #canvas-container {
-                overflow: auto;
-                position: absolute;
-                margin: -10px;
-                height: 100%;
-                width: 100%;
-                /* Hide scrollbar for Chrome, Safari and Opera */
-                ::-webkit-scrollbar {
-                    display: none;
-                }
-                /* Hide scrollbar for IE, Edge and Firefox */
-                -ms-overflow-style: none;  /* IE and Edge */
-                scrollbar-width: none;  /* Firefox */
             }
         </style>
     </head>
@@ -81,10 +66,9 @@
                 </div>
                 <div id="ticks">total ticks: 0</div>
             </div>
+
         </div>
-        <div id="canvas-container">
-            <canvas id="game-of-life-canvas"></canvas>
-        </div>
+        <canvas id="game-of-life-canvas"></canvas>
         <script src="./bootstrap.js"></script>
         <script>
             let spawnRateInput = document.getElementById('spawn-rate');
@@ -101,41 +85,6 @@
             timeBetweenInput.addEventListener('input', () => {
                 timeBetweenLabel.textContent = `tick time: ${timeBetweenInput.value} ms`;
             });
-
-            // canvas draggable
-            let canvas = document.getElementById('canvas-container');
-            let pos = { top: 0, left: 0, x: 0, y: 0 };
-
-            const mouseDownHandler = function(e) {
-                pos = {
-                    left: canvas.scrollLeft,
-                    top: canvas.scrollTop,
-                    // Get the current mouse position
-                    x: e.clientX,
-                    y: e.clientY,
-                };
-
-                document.addEventListener('mousemove', mouseMoveHandler);
-                document.addEventListener('mouseup', mouseUpHandler);
-            };
-
-            const mouseMoveHandler = function(e) {
-                // How far the mouse has been moved
-                const dx = e.clientX - pos.x;
-                const dy = e.clientY - pos.y;
-
-                // Scroll the element
-                canvas.scrollTop = pos.top - dy;
-                canvas.scrollLeft = pos.left - dx;
-            };
-
-            const mouseUpHandler = function() {
-                document.removeEventListener('mousemove', mouseMoveHandler);
-                document.removeEventListener('mouseup', mouseUpHandler);
-            };
-
-            // Attach the handler
-            canvas.addEventListener('mousedown', mouseDownHandler);
         </script>
     </body>
 </html>
