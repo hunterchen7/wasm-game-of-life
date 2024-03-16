@@ -114,6 +114,11 @@ impl Universe {
         let idx = self.get_index(row, column);
         self.cells.set(idx, !self.cells[idx]);
     }
+    
+    pub fn live_insect(&mut self, row: u32, column: u32) {
+        let idx = self.get_index(row, column);
+        self.cells.set(idx, true);
+    }
 
     // generates a new random board with given width and height
     // every cell has a 'life_chance' chance of being alive
