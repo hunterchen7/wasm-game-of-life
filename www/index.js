@@ -105,6 +105,7 @@ const drawCells = () => {
 };
 
 let isMouseDown = false;
+let selectedTool = "pencil";
 
 // click to toggle cells when paused
 canvas.addEventListener("mousedown", event => {
@@ -115,22 +116,28 @@ canvas.addEventListener("mouseup", event => {
     isMouseDown = false;
 });
 
+const calculateMousePos = (event) => {
+    const boundingRect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / boundingRect.width;
+    const scaleY = canvas.height / boundingRect.height;
+    const canvasLeft = (event.clientX - boundingRect.left) * scaleX;
+    const canvasTop = (event.clientY - boundingRect.top) * scaleY;
+    const row = Math.min(Math.floor(canvasTop / (CELL_SIZE + 1)), height - 1);
+    const col = Math.min(Math.floor(canvasLeft / (CELL_SIZE + 1)), width - 1);
+    return [row, col];
+}
+
 canvas.addEventListener("mousemove", event => {
     if (isMouseDown) {
-        const boundingRect = canvas.getBoundingClientRect();
-
-        const scaleX = canvas.width / boundingRect.width;
-        const scaleY = canvas.height / boundingRect.height;
-
-        const canvasLeft = (event.clientX - boundingRect.left) * scaleX;
-        const canvasTop = (event.clientY - boundingRect.top) * scaleY;
-
-        const row = Math.min(Math.floor(canvasTop / (CELL_SIZE + 1)), height - 1);
-        const col = Math.min(Math.floor(canvasLeft / (CELL_SIZE + 1)), width - 1);
+        const [row, col] = calculateMousePos(event);
 
         if (animationId === null) { // only allow toggle cells if the game is paused
             // turn on cell
-            universe.live_insect(row, col);
+            if (selectedTool === "pencil") {
+                universe.live_insect(row, col);
+            } else if (selectedTool === "eraser") {
+                universe.die_insect(row, col);
+            }
             drawGrid();
             drawCells();
         }
@@ -138,24 +145,23 @@ canvas.addEventListener("mousemove", event => {
 });
 
 canvas.addEventListener("click", event => {
-    const boundingRect = canvas.getBoundingClientRect();
-
-    const scaleX = canvas.width / boundingRect.width;
-    const scaleY = canvas.height / boundingRect.height;
-
-    const canvasLeft = (event.clientX - boundingRect.left) * scaleX;
-    const canvasTop = (event.clientY - boundingRect.top) * scaleY;
-
-    const row = Math.min(Math.floor(canvasTop / (CELL_SIZE + 1)), height - 1);
-    const col = Math.min(Math.floor(canvasLeft / (CELL_SIZE + 1)), width - 1);
+    const [row, col] = calculateMousePos(event);
 
     if (animationId === null) { // only allow toggle cells if the game is paused
         // turn on cell
-        universe.toggle_cell(row, col);
+        for (let shape of shapeNames) {
+            if (selectedTool === shape) {
+                console.log('spawn ', shape, ' at: ', row, col);
+                universe.spawner(shape, row, col);
+                drawGrid();
+                drawCells();
+                return;
+            }
+        }
         drawGrid();
         drawCells();
     }
-})
+});
 
 // space bar to pause/play
 document.body.onkeyup = function(e) {
@@ -212,6 +218,19 @@ randomizeButton.addEventListener("click", event => {
     drawCells();
 });
 
+const toolNames = ["pencil", "eraser"];
+const shapeNames = ["spaceship", "gun", "pulsar", "crab"];
+const toggleOtherTools = (buttonName) => {
+    for (let tool of toolNames.concat(shapeNames)) {
+        const button = document.getElementById(tool);
+        if (tool !== buttonName) {
+            button.style.backgroundColor = "white";
+        } else {
+            button.style.backgroundColor = "lightblue";
+        }
+    }
+}
+
 // step button
 const stepButton = document.getElementById("step");
 stepButton.addEventListener("click", event => {
@@ -224,6 +243,28 @@ stepButton.addEventListener("click", event => {
 const tickDisplay = document.getElementById("ticks");
 const updateTicks = () => {
     tickDisplay.textContent = `total ticks: ${ticks}`;
+}
+
+// pencil
+const pencilButton = document.getElementById("pencil");
+pencilButton.addEventListener("click", event => {
+    selectedTool = "pencil";
+    toggleOtherTools(selectedTool);
+});
+
+// eraser
+const eraserButton = document.getElementById("eraser");
+eraserButton.addEventListener("click", event => {
+    selectedTool = "eraser";
+    toggleOtherTools(selectedTool);
+});
+
+for (let shape of shapeNames) {
+    const button = document.getElementById(shape);
+    button.addEventListener("click", event => {
+        selectedTool = shape;
+        toggleOtherTools(selectedTool);
+    });
 }
 
 drawGrid();

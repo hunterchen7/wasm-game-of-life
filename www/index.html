@@ -71,12 +71,39 @@
                 align-items: center;
                 user-select: none;
             }
+            #tools {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 6px;
+                align-items: center;
+                justify-items: center;
+                margin: 15px;
+            }
+            #pencil, #eraser, #spaceship, #gun, #beehive, #pulsar, #crab, #glider {
+                margin: 2px;
+                border-radius: 5px;
+                cursor: pointer;
+                transition: background-color 0.07s;
+                background-color: white;
+                font-size: large;
+            }
+            #pencil {
+                background-color: lightblue;
+            }
         </style>
     </head>
     <body>
         <div id="control-panel">
             <div id="bar"></div>
             <div id="control-panel-buttons">
+                <div id="tools">
+                    <button id="pencil">✏️</button>
+                    <button id="gun">🔫</button>
+                    <button id="spaceship">🚀</button>
+                    <button id="eraser">🧽</button>
+                    <button id="pulsar">🌌</button>
+                    <button id="crab">🦀</button>
+                </div>
                 <button id="play-pause" class="cp-btn"></button>
                 <button id="reset" class="cp-btn">clear</button>
                 <div id="spawner">
