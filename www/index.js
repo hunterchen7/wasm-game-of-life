@@ -1,5 +1,5 @@
 import { Universe, Cell, wasm_memory } from "wasm-game-of-life";
-import { memory } from "wasm-game-of-life/wasm_game_of_life_bg.wasm";
+import {memory, universe_cells} from "wasm-game-of-life/wasm_game_of_life_bg.wasm";
 
 const CELL_SIZE = 9; // px
 const GRID_COLOR = "#161719";
@@ -104,7 +104,39 @@ const drawCells = () => {
     ctx.stroke();
 };
 
+let isMouseDown = false;
+
 // click to toggle cells when paused
+canvas.addEventListener("mousedown", event => {
+    isMouseDown = true;
+});
+
+canvas.addEventListener("mouseup", event => {
+    isMouseDown = false;
+});
+
+canvas.addEventListener("mousemove", event => {
+    if (isMouseDown) {
+        const boundingRect = canvas.getBoundingClientRect();
+
+        const scaleX = canvas.width / boundingRect.width;
+        const scaleY = canvas.height / boundingRect.height;
+
+        const canvasLeft = (event.clientX - boundingRect.left) * scaleX;
+        const canvasTop = (event.clientY - boundingRect.top) * scaleY;
+
+        const row = Math.min(Math.floor(canvasTop / (CELL_SIZE + 1)), height - 1);
+        const col = Math.min(Math.floor(canvasLeft / (CELL_SIZE + 1)), width - 1);
+
+        if (animationId === null) { // only allow toggle cells if the game is paused
+            // turn on cell
+            universe.live_insect(row, col);
+            drawGrid();
+            drawCells();
+        }
+    }
+});
+
 canvas.addEventListener("click", event => {
     const boundingRect = canvas.getBoundingClientRect();
 
@@ -118,11 +150,12 @@ canvas.addEventListener("click", event => {
     const col = Math.min(Math.floor(canvasLeft / (CELL_SIZE + 1)), width - 1);
 
     if (animationId === null) { // only allow toggle cells if the game is paused
+        // turn on cell
         universe.toggle_cell(row, col);
         drawGrid();
         drawCells();
     }
-});
+})
 
 // space bar to pause/play
 document.body.onkeyup = function(e) {

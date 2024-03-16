@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
     <head>
         <meta charset="utf-8">
         <title>Game of Life - WebAssembly</title>
@@ -17,24 +17,13 @@
                 overflow: hidden;
                 background-color: slategray;
             }
-            #fps {
-                white-space: pre;
-                font-family: monospace;
-            }
             #control-panel {
                 position: fixed;
-                z-index: 100;
+                z-index: 1;
                 right: 10px;
                 bottom: 10px;
-                background: #f0f0f0;
-                min-width: 250px;
-                width: 30%;
-                height: 50px;
-                border-radius: 10px;
-                display: flex;
-                justify-content: space-around;
-                align-items: center;
-                user-select: none;
+                width: auto;
+                height: auto;
             }
             #spawner {
                 display: flex;
@@ -46,28 +35,66 @@
                 flex-direction: column;
                 align-items: center;
             }
+            .cp-btn {
+                border-radius: 5px;
+                margin: 10px;
+                border: black 1px solid;
+                background-color: #f0f0f0;
+                cursor: pointer;
+                transition: background-color 0.3s;
+                padding: 5px 15px;
+            }
+            #play-pause {
+                min-width: 70px;
+            }
+            #randomize {
+                margin-top: 3px;
+            }
+            #bar {
+                z-index: 100;
+                width: 100%;
+                height: 20px;
+                background-color: #f0f0f0;
+                border-bottom: 1px solid black;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                border-top-left-radius: 5px;
+                border-top-right-radius: 5px;
+            }
+            #control-panel-buttons {
+                background: #f0f0f0;
+                border-bottom-left-radius: 5px;
+                border-bottom-right-radius: 5px;
+                display: flex;
+                justify-content: space-around;
+                align-items: center;
+                user-select: none;
+            }
         </style>
     </head>
     <body>
         <div id="control-panel">
-            <button id="play-pause"></button>
-            <button id="reset">reset</button>
-            <div id="spawner">
-                <div>
-                    <label for="spawn-rate"></label>
-                    <input id="spawn-rate" type="range" min="1" max="100" value="50">
+            <div id="bar"></div>
+            <div id="control-panel-buttons">
+                <button id="play-pause" class="cp-btn"></button>
+                <button id="reset" class="cp-btn">clear</button>
+                <div id="spawner">
+                    <div>
+                        <label for="spawn-rate"></label>
+                        <input id="spawn-rate" type="range" min="1" max="100" value="50">
+                    </div>
+                    <button id="randomize" class="cp-btn">randomize</button>
                 </div>
-                <button id="randomize">randomize</button>
-            </div>
-            <button id="step">next</button>
-            <div id="speed-things">
-                <div>
-                    <label for="time-between">tick rate: 50</label>
-                    <input id="time-between" type="range" min="0" max="300" value="33">
+                <button id="step" class="cp-btn">next</button>
+                <div id="speed-things">
+                    <div>
+                        <label for="time-between">tick rate: 50</label>
+                        <input id="time-between" type="range" min="0" max="300" value="33">
+                    </div>
+                    <div id="ticks">total ticks: 0</div>
                 </div>
-                <div id="ticks">total ticks: 0</div>
             </div>
-
         </div>
         <canvas id="game-of-life-canvas"></canvas>
         <script src="./bootstrap.js"></script>
@@ -86,6 +113,49 @@
             timeBetweenInput.addEventListener('input', () => {
                 timeBetweenLabel.textContent = `tick time: ${timeBetweenInput.value} ms`;
             });
+            let controlPanel = document.getElementById('control-panel');
+            let bar = document.getElementById('bar');
+            // let hideButton = document.getElementById('hide-button');
+
+            let dragStart = {x: 0, y: 0};
+            let pos = {top: controlPanel.offsetTop, left: controlPanel.offsetLeft};
+
+            bar.addEventListener('mousedown', function(e) {
+                dragStart = {
+                    x: e.clientX - pos.left,
+                    y: e.clientY - pos.top
+                };
+                document.addEventListener('mousemove', drag);
+                document.addEventListener('mouseup', stopDrag);
+            });
+
+            function drag(e) {
+                pos = {
+                    top: e.clientY - dragStart.y,
+                    left: e.clientX - dragStart.x
+                };
+                // readjust top and left based on cursor
+                controlPanel.style.top = `${pos.top}px`;
+                controlPanel.style.left = `${pos.left}px`;
+                // reset bottom and right to auto so the box doesn't grow and "stick" to bottom right
+                controlPanel.style.bottom = `auto`;
+                controlPanel.style.right = `auto`;
+            }
+
+            function stopDrag() {
+                document.removeEventListener('mousemove', drag);
+                document.removeEventListener('mouseup', stopDrag);
+            }
+
+            /*hideButton.addEventListener('click', function() {
+                if (controlPanelButtons.style.display === 'none') {
+                    controlPanelButtons.style.display = 'flex';
+                    hideButton.textContent = 'Hide';
+                } else {
+                    controlPanelButtons.style.display = 'none';
+                    hideButton.textContent = 'Show';
+                }
+            });*/
         </script>
     </body>
 </html>
