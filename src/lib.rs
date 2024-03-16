@@ -98,7 +98,9 @@ impl Universe {
             // so continue if out of bounds
             if (dx < 0 && row == 0) || (dy < 0 && column == 0)
                 || (dx > 0 && row >= self.height - 1) || (dy > 0 && column >= self.width - 1) {
-                continue;
+                // continue;
+                // kill on out of bounds
+                count += 3;
             }
             let x = (row as i32 + dx) as u32;
             let y = (column as i32 + dy) as u32;
@@ -109,15 +111,23 @@ impl Universe {
         }
         count
     }
-    
+
+    // toggles a cell
     pub fn toggle_cell(&mut self, row: u32, column: u32) {
         let idx = self.get_index(row, column);
         self.cells.set(idx, !self.cells[idx]);
     }
-    
+
+    // manifest a cell
     pub fn live_insect(&mut self, row: u32, column: u32) {
         let idx = self.get_index(row, column);
         self.cells.set(idx, true);
+    }
+
+    // kills a cell
+    pub fn die_insect(&mut self, row: u32, column: u32) {
+        let idx = self.get_index(row, column);
+        self.cells.set(idx, false);
     }
 
     // generates a new random board with given width and height
@@ -251,7 +261,102 @@ impl Universe {
             self.cells.set(i, js_sys::Math::random() < spawn_rate);
         }
     }
+
+    pub fn spawner(&mut self, pattern: &str, x: u32, y: u32) {
+        let pattern: &[(u32, u32)] = match pattern {
+            "spaceship" => &SPACESHIP,
+            "gun" => &GUN,
+            "pulsar" => &PULSAR,
+            "beehive" => &BEEHIVE,
+            "crab" => &CRAB,
+            _ => &SPACESHIP,
+        };
+        for (i, j) in pattern.iter() {
+            let idx = self.get_index(x + i, y + j);
+            self.cells.set(idx, true);
+        }
+    }
 }
+
+const SPACESHIP: [(u32, u32); 5] = [
+    (1, 2),
+    (2, 3),
+    (3, 1),
+    (3, 2),
+    (3, 3),
+];
+
+const GUN: [(u32, u32); 36] = [
+    (0, 24),
+    (1, 22),
+    (1, 24),
+    (2, 12),
+    (2, 13),
+    (2, 20),
+    (2, 21),
+    (2, 34),
+    (2, 35),
+    (3, 11),
+    (3, 15),
+    (3, 20),
+    (3, 21),
+    (3, 34),
+    (3, 35),
+    (4, 0),
+    (4, 1),
+    (4, 10),
+    (4, 16),
+    (4, 20),
+    (4, 21),
+    (5, 0),
+    (5, 1),
+    (5, 10),
+    (5, 14),
+    (5, 16),
+    (5, 17),
+    (5, 22),
+    (5, 24),
+    (6, 10),
+    (6, 16),
+    (6, 24),
+    (7, 11),
+    (7, 15),
+    (8, 12),
+    (8, 13),
+];
+
+const PULSAR: [(u32, u32); 48] = [
+    (2, 4), (2, 5), (2, 6), (2, 10), (2, 11), (2, 12),
+    (4, 2), (4, 7), (4, 9), (4, 14),
+    (5, 2), (5, 7), (5, 9), (5, 14),
+    (6, 2), (6, 7), (6, 9), (6, 14),
+    (7, 4), (7, 5), (7, 6), (7, 10), (7, 11), (7, 12),
+    (9, 4), (9, 5), (9, 6), (9, 10), (9, 11), (9, 12),
+    (10, 2), (10, 7), (10, 9), (10, 14),
+    (11, 2), (11, 7), (11, 9), (11, 14),
+    (12, 2), (12, 7), (12, 9), (12, 14),
+    (14, 4), (14, 5), (14, 6), (14, 10), (14, 11), (14, 12),
+];
+
+const BEEHIVE: [(u32, u32); 6] = [
+    (2, 3), (2, 4),
+    (3, 2), (3, 5),
+    (4, 3), (4, 4),
+];
+
+const CRAB: [(u32, u32); 25] = [
+    (0, 8), (0, 9),
+    (1, 7), (1, 8),
+    (2, 9),
+    (3, 11), (3, 12),
+    (4, 10),
+    (6, 9), (6, 12),
+    (7, 1), (7, 2), (7, 8), (7, 9),
+    (8, 0), (8, 1), (8, 7),
+    (9, 2), (9, 7), (9, 9),
+    (10, 4), (10, 5), (10, 8),
+    (11, 4), (11, 5)
+];
 
 #[wasm_bindgen]
 pub fn wasm_memory() -> JsValue {
